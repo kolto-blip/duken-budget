@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Дүкен / Бюджет</title>
+<style>
+:root{
+  --bg:#eef7fb; --card:#ffffff; --ink:#1d2b3a; --muted:#5b6b7c; --line:#d6e4ec;
+  --sky:#00a3c4; --sky2:#007f9a; --gold:#f5b800; --gold2:#d99a00;
+  --ok:#1f9d55; --okbg:#e3f6ea; --bad:#d64545; --badbg:#fde8e8; --warn:#b7791f; --warnbg:#fff4dc;
+  --r:18px; --shadow:0 6px 20px rgba(20,60,90,.10);
+}
+*{box-sizing:border-box}
+html{font-size:clamp(15px, 0.6vw + 11px, 22px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.35;min-height:100vh}
+button{font:inherit;cursor:pointer;border:0;color:inherit}
+input{font:inherit}
+.top{position:sticky;top:0;z-index:20;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;padding:.55rem 1rem;background:linear-gradient(90deg,var(--sky),#2bb6d4);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.brand{font-weight:800;font-size:1.15rem;white-space:nowrap}
+#chips{display:flex;gap:.4rem;flex-wrap:wrap;flex:1}
+.chip{background:rgba(255,255,255,.18);border-radius:999px;padding:.2rem .7rem;font-size:.85rem;white-space:nowrap}
+.chip b{margin-left:.3rem}
+.chip.on{background:var(--gold);color:#3a2a00;font-weight:700}
+.iconbtn{background:rgba(255,255,255,.2);color:#fff;border-radius:10px;padding:.3rem .6rem}
+main{max-width:1200px;margin:0 auto;padding:1rem}
+.scr{display:none;animation:fade .35s ease}
+.scr.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:1.2rem}
+h1{font-size:2rem;margin:.2rem 0}
+h2{font-size:1.4rem;margin:.2rem 0 .6rem}
+.sub{color:var(--muted);margin:.2rem 0 1rem}
+.field{margin:1rem 0}
+.field>label{display:block;font-weight:700;margin-bottom:.4rem}
+.seg{display:flex;flex-wrap:wrap;gap:.4rem}
+.seg button{background:#e6f1f6;border-radius:12px;padding:.55rem 1rem;font-weight:600;border:2px solid transparent}
+.seg button.on{background:var(--sky);color:#fff;border-color:var(--sky2)}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.5rem}
+.names input,.txt{width:100%;padding:.6rem .8rem;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem}
+.lvl{text-align:left;background:#f4f9fb;border:2px solid var(--line);border-radius:14px;padding:.8rem}
+.lvl b{display:block;font-size:1.05rem}
+.lvl small{color:var(--muted)}
+.lvl.on{border-color:var(--sky);background:#e0f4f9;box-shadow:inset 0 0 0 1px var(--sky)}
+.big{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;background:var(--gold);color:#3a2a00;font-weight:800;font-size:1.15rem;padding:.8rem 1.6rem;border-radius:14px;box-shadow:0 4px 0 var(--gold2);transition:transform .08s}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 var(--gold2)}
+.big.blue{background:var(--sky);color:#fff;box-shadow:0 4px 0 var(--sky2)}
+.big.ghost{background:#e6f1f6;color:var(--ink);box-shadow:0 4px 0 #c5d8e2}
+.big:disabled{opacity:.5;cursor:default}
+.actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem}
+/* task */
+.taskwrap{max-width:760px;margin:1rem auto;text-align:center}
+.turnlabel{font-size:1.1rem;color:var(--muted)}
+.turnlabel b{color:var(--ink);font-size:1.5rem;display:block}
+.taskcard{margin:1rem 0;background:linear-gradient(135deg,#fff8e1,#fff);border:3px dashed var(--gold);border-radius:22px;padding:1.6rem;font-size:1.45rem;font-weight:700;animation:flip .6s ease}
+.taskcard .tr{display:block;font-size:.95rem;font-weight:500;color:var(--muted);margin-top:.6rem}
+.taskcard .emo{font-size:2.6rem;display:block;margin-bottom:.4rem}
+@keyframes flip{from{transform:rotateY(90deg) scale(.9);opacity:0}to{transform:none;opacity:1}}
+.pill{display:inline-block;background:#e0f4f9;color:var(--sky2);border-radius:999px;padding:.25rem .8rem;font-weight:700;margin:.2rem}
+/* shop */
+.shopbar{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem}
+.minitask{flex:1;min-width:240px;background:#fff8e1;border-left:6px solid var(--gold);border-radius:12px;padding:.6rem .9rem;font-weight:600}
+.shop{display:grid;grid-template-columns:1fr minmax(320px,420px);gap:1rem;align-items:start}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.6rem}
+.prod{position:relative;background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:.7rem .5rem;display:flex;flex-direction:column;align-items:center;text-align:center;gap:.1rem;border:2px solid transparent;transition:transform .1s}
+.prod:hover{transform:translateY(-2px);border-color:#bfe6ef}
+.prod:active{transform:scale(.97)}
+.prod .em{font-size:2.3rem;line-height:1.1}
+.prod .kz{font-size:1rem}
+.prod .tr{font-size:.8rem;color:var(--muted)}
+.prod .price{margin-top:.25rem;font-weight:800;color:var(--sky2);font-size:1.05rem}
+.badge{position:absolute;top:6px;left:6px;background:var(--bad);color:#fff;font-weight:800;font-size:.8rem;border-radius:8px;padding:.1rem .4rem;transform:rotate(-6deg)}
+.incart{position:absolute;top:6px;right:6px;background:var(--gold);color:#3a2a00;border-radius:999px;min-width:1.6rem;height:1.6rem;display:grid;place-items:center;font-weight:800;font-size:.85rem}
+.prod.full{opacity:.65}
+.cart{position:sticky;top:4.2rem}
+.cart h2{display:flex;justify-content:space-between;align-items:center}
+.empty{color:var(--muted);text-align:center;padding:1rem}
+.row{display:grid;grid-template-columns:1fr auto;gap:.4rem .6rem;align-items:center;padding:.55rem;border-radius:12px;border:2px solid var(--line);margin-bottom:.45rem;background:#fbfdfe}
+.row.ok{border-color:var(--ok);background:var(--okbg)}
+.row.bad{border-color:var(--bad);background:var(--badbg)}
+.ri{display:flex;gap:.5rem;align-items:center;min-width:0}
+.ri .em{font-size:1.7rem}
+.ri small{display:block;color:var(--muted);font-size:.8rem}
+.ri .d{color:var(--bad);font-weight:800}
+.qty{display:flex;align-items:center;gap:.3rem}
+.qty button{width:2.1rem;height:2.1rem;border-radius:10px;background:#e6f1f6;font-weight:800;font-size:1.2rem}
+.qty button:disabled{opacity:.35}
+.qty span{min-width:1.6rem;text-align:center;font-weight:800;font-size:1.1rem}
+.lineinp{grid-column:1/-1;display:flex;align-items:center;gap:.4rem;font-size:.9rem;color:var(--muted)}
+.num{width:100%;max-width:10rem;padding:.45rem .6rem;border:2px solid var(--line);border-radius:10px;font-weight:700;font-size:1.05rem;text-align:right;background:#fff;color:var(--ink)}
+.num.ok{border-color:var(--ok);background:var(--okbg)}
+.num.bad{border-color:var(--bad);background:var(--badbg)}
+.sum{border-top:2px dashed var(--line);margin-top:.6rem;padding-top:.6rem;display:grid;gap:.5rem}
+.sum label{display:flex;justify-content:space-between;align-items:center;gap:.6rem;font-weight:700}
+.sum label small{display:block;font-weight:500;color:var(--muted);font-size:.78rem}
+.budgetnote{background:#e0f4f9;border-radius:10px;padding:.4rem .7rem;font-weight:700;text-align:center}
+#fb{margin-top:.6rem}
+.fb{border-radius:12px;padding:.7rem .9rem;font-weight:600}
+.fb ul{margin:.3rem 0 0;padding-left:1.2rem;font-weight:500}
+.fb.bad{background:var(--badbg);color:#8a1f1f}
+.fb.ok{background:var(--okbg);color:#145c33}
+.fb.warn{background:var(--warnbg);color:#7a4f0a}
+.shake{animation:shake .45s}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.fab{display:none}
+/* dialog */
+.dlg{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:1rem;align-items:start}
+.receipt{font-family:ui-monospace,Consolas,monospace;background:#fffef6;border:1px solid #eadfb5;border-radius:6px;padding:1rem;box-shadow:var(--shadow);font-size:.9rem}
+.receipt h3{text-align:center;margin:0 0 .5rem}
+.receipt .l{display:flex;justify-content:space-between;gap:.5rem}
+.receipt hr{border:0;border-top:1px dashed #b9ad7d;margin:.5rem 0}
+.receipt .t{font-weight:800}
+.phr{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.phr h3{margin:.2rem 0 .4rem;font-size:1rem}
+.ph{display:block;width:100%;text-align:left;background:#f1f8fb;border:2px solid var(--line);border-radius:10px;padding:.45rem .6rem;margin-bottom:.35rem;font-size:.92rem}
+.ph:hover{border-color:var(--sky)}
+.ph.s{background:#fff8e1;border-color:#f1dfa5}
+.ph:disabled{opacity:.4}
+textarea.txt{min-height:11rem;resize:vertical;font-size:1rem;line-height:1.5}
+.sel{padding:.45rem .6rem;border:2px solid var(--line);border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
+.score3{display:flex;gap:.6rem;flex-wrap:wrap}
+/* tables */
+.board{width:100%;border-collapse:collapse;font-size:1.15rem}
+.board td,.board th{padding:.6rem .7rem;border-bottom:1px solid var(--line);text-align:left}
+.board td:last-child,.board th:last-child{text-align:right;font-weight:800}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:.6rem;margin:1.2rem 0}
+.pod{background:var(--sky);color:#fff;border-radius:14px 14px 0 0;width:min(28vw,180px);text-align:center;padding:.6rem .4rem;font-weight:800}
+.pod .m{font-size:2.2rem;display:block}
+.pod.p1{height:13rem;background:var(--gold);color:#3a2a00}
+.pod.p2{height:10rem}
+.pod.p3{height:8rem;background:#48a9c0}
+#pop{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font-size:4.5rem;font-weight:900;color:var(--gold);text-shadow:0 4px 0 #a76f00,0 0 30px rgba(255,255,255,.9);pointer-events:none;opacity:0;z-index:60}
+#pop.go{animation:pop 1.4s ease forwards}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-30%) scale(.4)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}70%{opacity:1;transform:translate(-50%,-60%) scale(1)}100%{opacity:0;transform:translate(-50%,-90%) scale(.9)}}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:50}
+.muted{color:var(--muted)}
+.hide{display:none!important}
+@media (max-width:860px){
+  .shop,.dlg{grid-template-columns:1fr}
+  .cart{position:static}
+  .top{position:static;justify-content:space-between;padding:.5rem 16px}
+  #chips{order:3;flex:0 0 100%;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
+  .fab{display:flex;position:fixed;right:16px;bottom:16px;z-index:30;border-radius:999px;padding:.8rem 1.1rem}
+  .phr{grid-template-columns:1fr}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(105px,1fr))}
+  main{padding:.75rem 16px 5rem}
+  h1{font-size:1.6rem}
+  .taskcard{font-size:1.2rem;padding:1.1rem}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">🛒 Дүкен / Бюджет</div>
+  <div id="chips"></div>
+  <button class="iconbtn" id="btnHome" title="Новая игра">⟲ Жаңа ойын</button>
+</header>
+
+<main>
+<!-- SETUP -->
+<section id="scrSetup" class="scr">
+  <div class="card">
+    <h1>🛒 Дүкен / Бюджет</h1>
+    <p class="sub">Командная игра: покупаем товары по заданию, считаем расходы и сдачу, а потом разыгрываем диалог «продавец — покупатель».</p>
+    <div id="contBox" class="hide" style="margin-bottom:1rem">
+      <button class="big blue" id="btnCont">▶ Продолжить сохранённую игру</button>
+    </div>
+    <div class="field"><label>Количество команд</label>
+      <div class="seg" data-key="n"><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button></div>
+    </div>
+    <div class="field"><label>Названия команд</label><div class="names" id="names"></div></div>
+    <div class="field"><label>Язык диалога</label>
+      <div class="seg" data-key="lang"><button data-v="ru">Русский</button><button data-v="en">English</button></div>
+    </div>
+    <div class="field"><label>Уровень (Деңгей)</label>
+      <div class="levels" data-key="level">
+        <button class="lvl" data-v="1"><b>1 ⭐ Сложение и вычитание</b><small>Каждый товар — по 1 штуке. Сложи цены, найди сдачу.</small></button>
+        <button class="lvl" data-v="2"><b>2 ⭐⭐ Умножение</b><small>Несколько штук одного товара: цена × количество.</small></button>
+        <button class="lvl" data-v="3"><b>3 ⭐⭐⭐ Скидки в %</b><small>Товары со скидкой −10% и −25%: найди новую цену.</small></button>
+      </div>
+    </div>
+    <div class="field"><label>Бюджет каждой команды</label>
+      <div class="seg" data-key="budget"><button data-v="3000">3 000 ₸</button><button data-v="5000">5 000 ₸</button><button data-v="10000">10 000 ₸</button></div>
+    </div>
+    <div class="field"><label>Количество раундов</label>
+      <div class="seg" data-key="rounds"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div>
+    </div>
+    <div class="actions"><button class="big" id="btnStart">🚀 Бастау! / Начать</button></div>
+  </div>
+</section>
+
+<!-- TASK -->
+<section id="scrTask" class="scr">
+  <div class="taskwrap">
+    <div class="turnlabel" id="turnLabel"></div>
+    <div class="taskcard" id="taskCard"></div>
+    <div><span class="pill" id="taskBudget"></span><span class="pill" id="taskLevel"></span></div>
+    <div class="actions" style="justify-content:center">
+      <button class="big ghost" id="btnReroll">🎲 Другое задание</button>
+      <button class="big blue" id="btnToShop">Дүкенге → В магазин</button>
+    </div>
+  </div>
+</section>
+
+<!-- SHOP -->
+<section id="scrShop" class="scr">
+  <div class="shopbar"><div class="minitask" id="miniTask"></div></div>
+  <div class="shop">
+    <div class="grid" id="grid"></div>
+    <div class="card cart" id="cart">
+      <h2><span>🧺 Себет / Корзина</span><span class="muted" id="cartCount" style="font-size:.9rem"></span></h2>
+      <div id="rows"></div>
+      <div class="sum" id="sumBox">
+        <div class="budgetnote" id="budgetNote"></div>
+        <label><span>Итого<small>Барлығы / Total</small></span><input class="num" id="inTotal" inputmode="numeric" autocomplete="off" placeholder="? ₸"></label>
+        <label><span>Сдача<small>Қайтарым / Change</small></span><input class="num" id="inChange" inputmode="numeric" autocomplete="off" placeholder="? ₸"></label>
+        <button class="big" id="btnCheck">✔ Тексеру</button>
+        <button class="big ghost hide" id="btnReveal">👀 Показать решение</button>
+        <button class="big blue hide" id="btnToDialog">💬 К диалогу →</button>
+      </div>
+      <div id="fb"></div>
+    </div>
+  </div>
+  <button class="big blue fab" id="fab">🧺 <span id="fabN">0</span></button>
+</section>
+
+<!-- DIALOG -->
+<section id="scrDialog" class="scr">
+  <h2 id="dlgTitle"></h2>
+  <div class="dlg">
+    <div>
+      <div class="receipt" id="receipt"></div>
+    </div>
+    <div class="card">
+      <p class="muted" style="margin-top:0" id="dlgHint"></p>
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.6rem">
+        <label for="itemSel"><b id="lblItem"></b></label>
+        <select class="sel" id="itemSel"></select>
+      </div>
+      <div class="phr">
+        <div><h3 id="hBuyer"></h3><div id="phBuyer"></div></div>
+        <div><h3 id="hSeller"></h3><div id="phSeller"></div></div>
+      </div>
+      <textarea class="txt" id="dlgText" placeholder=""></textarea>
+      <div class="actions">
+        <button class="big ghost" id="btnSample">📝 Пример диалога</button>
+        <button class="big ghost" id="btnSpeak">🔊 Озвучить</button>
+        <button class="big ghost" id="btnClear">🧹 Очистить</button>
+      </div>
+      <hr style="border:0;border-top:2px dashed var(--line);margin:1.2rem 0">
+      <p style="margin:.2rem 0 .5rem"><b>Учитель оценивает диалог (Мұғалім бағасы):</b></p>
+      <div class="score3">
+        <button class="big" data-dp="10">⭐ Отлично +10</button>
+        <button class="big blue" data-dp="5">👍 Хорошо +5</button>
+        <button class="big ghost" data-dp="0">Без баллов</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROUND -->
+<section id="scrRound" class="scr">
+  <div class="card" style="max-width:720px;margin:1rem auto">
+    <h1 id="roundTitle"></h1>
+    <table class="board" id="board"></table>
+    <div class="actions"><button class="big" id="btnNextRound"></button></div>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section id="scrFinal" class="scr">
+  <div class="card" style="max-width:820px;margin:1rem auto;text-align:center">
+    <h1>🏆 Ойын аяқталды! Игра окончена!</h1>
+    <div class="podium" id="podium"></div>
+    <table class="board" id="finalBoard"></table>
+    <div class="actions" style="justify-content:center"><button class="big" id="btnNew">🔄 Новая игра</button></div>
+  </div>
+</section>
+</main>
+
+<canvas id="fx"></canvas>
+<div id="pop"></div>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const fmt=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+/* ---------- PRODUCTS ----------
+ id|emoji|kz|ru|ruUnit (сколько стоит …)|ru accusative|en|en one|en many|en general|price|cat */
+const RAW=`bread|🍞|Нан|Хлеб|буханка хлеба|хлеб|Bread|a loaf of bread|loaves of bread|bread|240|food
+milk|🥛|Сүт|Молоко|пакет молока|молоко|Milk|a carton of milk|cartons of milk|milk|440|drink
+water|💧|Су|Вода|бутылка воды|воду|Water|a bottle of water|bottles of water|water|160|drink
+juice|🧃|Шырын|Сок|пачка сока|сок|Juice|a pack of juice|packs of juice|juice|480|drink
+apple|🍎|Алма|Яблоки (1 кг)|килограмм яблок|яблоки|Apples (1 kg)|a kilo of apples|kilos of apples|apples|600|fruit
+banana|🍌|Банан|Бананы (1 кг)|килограмм бананов|бананы|Bananas (1 kg)|a kilo of bananas|kilos of bananas|bananas|720|fruit
+grapes|🍇|Жүзім|Виноград (1 кг)|килограмм винограда|виноград|Grapes (1 kg)|a kilo of grapes|kilos of grapes|grapes|960|fruit
+orange|🍊|Апельсин|Апельсины (1 кг)|килограмм апельсинов|апельсины|Oranges (1 kg)|a kilo of oranges|kilos of oranges|oranges|800|fruit
+cucumber|🥒|Қияр|Огурцы (1 кг)|килограмм огурцов|огурцы|Cucumbers (1 kg)|a kilo of cucumbers|kilos of cucumbers|cucumbers|400|veg
+tomato|🍅|Қызанақ|Помидоры (1 кг)|килограмм помидоров|помидоры|Tomatoes (1 kg)|a kilo of tomatoes|kilos of tomatoes|tomatoes|520|veg
+carrot|🥕|Сәбіз|Морковь (1 кг)|килограмм моркови|морковь|Carrots (1 kg)|a kilo of carrots|kilos of carrots|carrots|200|veg
+cheese|🧀|Ірімшік|Сыр|кусок сыра|сыр|Cheese|a piece of cheese|pieces of cheese|cheese|1200|food
+sausage|🌭|Шұжық|Колбаса|палка колбасы|колбасу|Sausage|a sausage|sausages|sausage|1400|food
+eggs|🥚|Жұмыртқа|Яйца (10 шт.)|упаковка яиц|яйца|Eggs (10 pcs)|a box of eggs|boxes of eggs|eggs|880|food
+cookies|🍪|Печенье|Печенье|пачка печенья|печенье|Cookies|a pack of cookies|packs of cookies|cookies|400|sweet
+chocolate|🍫|Шоколад|Шоколад|плитка шоколада|шоколад|Chocolate|a bar of chocolate|bars of chocolate|chocolate|360|sweet
+icecream|🍦|Балмұздақ|Мороженое|мороженое|мороженое|Ice cream|an ice cream|ice creams|ice cream|320|sweet
+notebook|📓|Дәптер|Тетрадь|тетрадь|тетрадь|Notebook|a notebook|notebooks|notebooks|120|school
+pen|🖊️|Қаламсап|Ручка|ручка|ручку|Pen|a pen|pens|pens|80|school
+pencil|✏️|Қарындаш|Карандаш|карандаш|карандаш|Pencil|a pencil|pencils|pencils|60|school
+ruler|📏|Сызғыш|Линейка|линейка|линейку|Ruler|a ruler|rulers|rulers|100|school
+eraser|🧽|Өшіргіш|Ластик|ластик|ластик|Eraser|an eraser|erasers|erasers|40|school
+backpack|🎒|Арқа сөмке|Рюкзак|рюкзак|рюкзак|Backpack|a backpack|backpacks|backpacks|3200|school`;
+const P=RAW.trim().split('\n').map(l=>{const f=l.split('|');return{id:f[0],e:f[1],kz:f[2],ru:f[3],ruU:f[4],ra:f[5],en:f[6],en1:f[7],enN:f[8],enG:f[9],price:+f[10],cat:f[11]}});
+const PR={};P.forEach(p=>PR[p.id]=p);
+const CAT={food:'продукты',drink:'напитки',fruit:'фрукты',veg:'овощи',sweet:'сладости',school:'канцтовары'};
+const CATE={food:'🍞',drink:'🧃',fruit:'🍎',veg:'🥒',sweet:'🍫',school:'📓'};
+
+/* ---------- TASKS ---------- */
+const TASKS={
+1:[
+ {e:'🍳',ru:'Купи продукты для завтрака: хлеб, молоко и ещё один любой товар.',en:'Buy food for breakfast: bread, milk and one more item of your choice.',items:{bread:1,milk:1},minDistinct:3},
+ {e:'🎒',ru:'Собери набор школьника: тетрадь, ручку, карандаш и линейку. Сколько сдачи?',en:'Make a school set: a notebook, a pen, a pencil and a ruler. How much change will you get?',items:{notebook:1,pen:1,pencil:1,ruler:1},exact:true},
+ {e:'🥗',ru:'Купи фрукты для фруктового салата — минимум 3 разных фрукта.',en:'Buy fruit for a fruit salad — at least 3 different fruits.',distinct:{fruit:3}},
+ {e:'🥒',ru:'Купи овощи для салата: огурцы, помидоры и ещё один товар.',en:'Buy vegetables for a salad: cucumbers, tomatoes and one more item.',items:{cucumber:1,tomato:1},minDistinct:3},
+ {e:'🍰',ru:'Сладкий стол: купи 2 разные сладости и 1 напиток.',en:'Sweet table: buy 2 different sweets and 1 drink.',distinct:{sweet:2,drink:1}},
+ {e:'🛍️',ru:'Купи 4 разных товара и потрать не больше 2 000 ₸.',en:'Buy 4 different items and spend no more than 2 000 tenge.',minDistinct:4,maxSpend:2000},
+ {e:'☕',ru:'Всё для чаепития: печенье, шоколад и молоко. Сколько сдачи?',en:'Everything for a tea party: cookies, chocolate and milk. How much change?',items:{cookies:1,chocolate:1,milk:1},exact:true},
+ {e:'🧺',ru:'Купи 1 напиток, 1 фрукт и 1 сладость для перемены.',en:'Buy 1 drink, 1 fruit and 1 sweet for the break.',distinct:{drink:1,fruit:1,sweet:1}}
+],
+2:[
+ {e:'📓',ru:'Купи 3 тетради и 2 ручки. Сколько сдачи?',en:'Buy 3 notebooks and 2 pens. How much change will you get?',items:{notebook:3,pen:2},exact:true},
+ {e:'🧺',ru:'Пикник на 4 человек: каждому напиток и фрукт (4 напитка, 4 фрукта) и 1 хлеб. Не превышай бюджет!',en:'A picnic for 4 people: a drink and a fruit for everyone (4 drinks, 4 fruits) and 1 bread. Stay within the budget!',qty:{drink:4,fruit:4},items:{bread:1}},
+ {e:'🎉',ru:'Праздник в классе: 5 мороженых и 2 сока.',en:'A class party: 5 ice creams and 2 juices.',items:{icecream:5,juice:2},exact:true},
+ {e:'✏️',ru:'Купи 4 карандаша, 2 линейки и 3 ластика.',en:'Buy 4 pencils, 2 rulers and 3 erasers.',items:{pencil:4,ruler:2,eraser:3},exact:true},
+ {e:'🍳',ru:'Завтрак для семьи: 2 молока, 2 хлеба и 1 упаковка яиц.',en:'Breakfast for a family: 2 milks, 2 breads and 1 box of eggs.',items:{milk:2,bread:2,eggs:1},exact:true},
+ {e:'🍬',ru:'Угости 6 друзей: купи 6 сладостей (можно разные).',en:'Treat 6 friends: buy 6 sweets (they can be different).',qty:{sweet:6}},
+ {e:'🍎',ru:'Купи 3 кг яблок и 2 кг бананов. Сколько сдачи?',en:'Buy 3 kilos of apples and 2 kilos of bananas. How much change?',items:{apple:3,banana:2},exact:true},
+ {e:'💧',ru:'Поход: 5 бутылок воды и 3 пачки печенья.',en:'A hike: 5 bottles of water and 3 packs of cookies.',items:{water:5,cookies:3},exact:true}
+],
+3:[
+ {e:'🧀',ru:'Купи 2 сыра и 3 сока. Внимание на скидки!',en:'Buy 2 pieces of cheese and 3 juices. Look at the discounts!',items:{cheese:2,juice:3},exact:true},
+ {e:'🎒',ru:'Купи рюкзак и 5 тетрадей со скидкой.',en:'Buy a backpack and 5 notebooks with a discount.',items:{backpack:1,notebook:5},exact:true},
+ {e:'📓',ru:'Купи 4 тетради и 3 ручки. Посчитай цену со скидкой!',en:'Buy 4 notebooks and 3 pens. Count the price with the discount!',items:{notebook:4,pen:3},exact:true},
+ {e:'🏷️',ru:'Охота за скидками: купи минимум 3 разных товара со скидкой.',en:'Discount hunt: buy at least 3 different discounted items.',discDistinct:3},
+ {e:'🍫',ru:'Купи 2 шоколада и 2 мороженых со скидкой.',en:'Buy 2 chocolates and 2 ice creams with a discount.',items:{chocolate:2,icecream:2},exact:true},
+ {e:'🧺',ru:'Пикник на 4 человек: 4 напитка, 4 фрукта и сыр. Используй скидки!',en:'A picnic for 4 people: 4 drinks, 4 fruits and cheese. Use the discounts!',qty:{drink:4,fruit:4},items:{cheese:1}},
+ {e:'🍇',ru:'Купи 2 кг винограда, 2 шоколада и 1 колбасу.',en:'Buy 2 kilos of grapes, 2 chocolates and 1 sausage.',items:{grapes:2,chocolate:2,sausage:1},exact:true},
+ {e:'🥕',ru:'Суп: 2 кг моркови, 1 кг помидоров и 1 хлеб — со скидкой.',en:'Soup: 2 kilos of carrots, 1 kilo of tomatoes and 1 bread — with a discount.',items:{carrot:2,tomato:1,bread:1},exact:true}
+]};
+function minCost(t){let c=0;const used=new Set();const cheap=f=>P.filter(f).sort((a,b)=>a.price-b.price);
+ for(const[id,n]of Object.entries(t.items||{})){c+=PR[id].price*n;used.add(id)}
+ for(const[cat,n]of Object.entries(t.qty||{})){c+=cheap(p=>p.cat===cat)[0].price*n}
+ for(const[cat,n]of Object.entries(t.distinct||{})){cheap(p=>p.cat===cat&&!used.has(p.id)).slice(0,n).forEach(p=>{c+=p.price;used.add(p.id)})}
+ if(t.minDistinct){cheap(p=>!used.has(p.id)).slice(0,Math.max(0,t.minDistinct-used.size)).forEach(p=>c+=p.price)}
+ if(t.discDistinct)c+=300;
+ return c}
+
+/* ---------- PHRASES ---------- */
+const PH={
+ ru:{roleB:'Покупатель',roleS:'Продавец',
+  buyer:['Здравствуйте!','Сколько стоит {u}?','Дайте, пожалуйста, {qa}.','Есть ли скидка на {a}?','Сколько с меня?','Вот, пожалуйста, {B} тенге.','Спасибо! До свидания!'],
+  seller:['Здравствуйте! Чем могу помочь?','{U} стоит {p} тенге.','Сегодня на {a} скидка {d}%!','Цена со скидкой — {pd} тенге.','С вас {T} тенге.','Ваша сдача — {C} тенге.','Пожалуйста! Приходите ещё!']},
+ en:{roleB:'Customer',roleS:'Seller',
+  buyer:['Hello!','How much is {u}?','Can I have {qn}, please?','Is there a discount on {g}?','How much is it altogether?','Here you are, {B} tenge.','Thank you! Goodbye!'],
+  seller:['Hello! Can I help you?','It costs {p} tenge.','Today there is a {d}% discount on {g}!','The price with the discount is {pd} tenge.','That will be {T} tenge, please.','Here is your change: {C} tenge.','You are welcome! Come again!']}
+};
+
+/* ---------- STATE ---------- */
+const DEF_NAMES=['Барыстар 🐆','Қырандар 🦅','Жұлдыздар ⭐','Тұлпарлар 🐎','Алмалар 🍎'];
+let cfg={n:3,lang:'ru',level:1,budget:5000,rounds:2,names:DEF_NAMES.slice()};
+let S=null;
+const KEY='duken-budget-save-v1';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({S,cfg}))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');return d&&d.S&&d.S.teams?d:null}catch(e){return null}}
+function clearSave(){try{localStorage.removeItem(KEY)}catch(e){}}
+
+/* ---------- SCREENS ---------- */
+function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id===id));if(S){S.screen=id;save()}window.scrollTo(0,0);renderChips()}
+function renderChips(){const c=$('#chips');if(!S||S.screen==='scrSetup'){c.innerHTML='';return}
+ c.innerHTML=S.teams.map((t,i)=>`<span class="chip ${i===S.turn&&S.screen!=='scrRound'&&S.screen!=='scrFinal'?'on':''}">${esc(t.name)}<b>${t.score}</b></span>`).join('')+`<span class="chip">Раунд ${S.round}/${S.cfg.rounds}</span>`}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+/* ---------- SETUP ---------- */
+function renderSetup(){
+ document.querySelectorAll('[data-key]').forEach(g=>{const k=g.dataset.key;g.querySelectorAll('button').forEach(b=>b.classList.toggle('on',String(cfg[k])===b.dataset.v))});
+ const box=$('#names');const cur=[...box.querySelectorAll('input')].map(i=>i.value);
+ cur.forEach((v,i)=>cfg.names[i]=v);
+ box.innerHTML='';for(let i=0;i<cfg.n;i++){const inp=document.createElement('input');inp.value=cfg.names[i]||('Команда '+(i+1));inp.maxLength=24;inp.setAttribute('aria-label','Команда '+(i+1));inp.oninput=()=>cfg.names[i]=inp.value;box.appendChild(inp)}
+ $('#contBox').classList.toggle('hide',!load());
+}
+document.querySelectorAll('[data-key]').forEach(g=>g.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=g.dataset.key;cfg[k]=k==='lang'?b.dataset.v:+b.dataset.v;renderSetup()}));
+$('#btnStart').onclick=()=>{
+ const names=[...$('#names').querySelectorAll('input')].map((i,k)=>i.value.trim()||('Команда '+(k+1)));
+ S={cfg:{lang:cfg.lang,level:cfg.level,budget:cfg.budget,rounds:cfg.rounds},teams:names.map(n=>({name:n,score:0})),round:1,turn:0,used:[],screen:'scrTask'};
+ startTurn();
+};
+$('#btnCont').onclick=()=>{const d=load();if(!d)return;S=d.S;cfg=Object.assign(cfg,d.cfg);resume()};
+$('#btnHome').onclick=()=>{if(S&&!confirm('Начать новую игру? Текущие результаты будут удалены.'))return;clearSave();S=null;renderSetup();show('scrSetup')};
+function resume(){const m={scrTask:showTask,scrShop:showShop,scrDialog:showDialog,scrRound:showRound,scrFinal:showFinal};(m[S.screen]||showTask)()}
+
+/* ---------- TURN / TASK ---------- */
+function pickTask(){
+ const L=S.cfg.level,list=TASKS[L];
+ let pool=list.map((t,i)=>i).filter(i=>minCost(list[i])<=S.cfg.budget);
+ if(!pool.length)pool=list.map((t,i)=>i);
+ let fresh=pool.filter(i=>!S.used.includes(i)&&i!==S.taskIdx);
+ if(!fresh.length){S.used=[];fresh=pool.filter(i=>i!==S.taskIdx);if(!fresh.length)fresh=pool}
+ const idx=fresh[Math.floor(Math.random()*fresh.length)];
+ S.taskIdx=idx;S.used.push(idx);
+ S.disc={};
+ if(L===3){const t=list[idx];const d=()=>Math.random()<.5?10:25;
+  Object.keys(t.items||{}).forEach(id=>S.disc[id]=d());
+  const extra=shuffle(P.filter(p=>!S.disc[p.id])).slice(0,t.discDistinct?6:4);extra.forEach(p=>S.disc[p.id]=d());
+ }
+}
+function task(){return TASKS[S.cfg.level][S.taskIdx]}
+function startTurn(){
+ S.taskIdx=undefined;pickTask();
+ Object.assign(S,{cart:{},inp:{line:{},total:'',change:''},mark:{},la:{},ta:0,ca:0,wrong:0,done:false,earned:0,rerolled:false,dlg:''});
+ showTask();
+}
+function taskText(t){return S.cfg.lang==='en'?t.en:t.ru}
+function showTask(){
+ const t=task(),team=S.teams[S.turn];
+ $('#turnLabel').innerHTML=`Кезек / Ход команды<b>${esc(team.name)}</b>`;
+ $('#taskCard').innerHTML=`<span class="emo">${t.e}</span>${esc(taskText(t))}${S.cfg.lang==='en'?`<span class="tr">${esc(t.ru)}</span>`:''}`;
+ const tc=$('#taskCard');tc.style.animation='none';void tc.offsetWidth;tc.style.animation='';
+ $('#taskBudget').textContent=`💰 Бюджет: ${fmt(S.cfg.budget)} ₸`;
+ $('#taskLevel').textContent=['','⭐ Уровень 1','⭐⭐ Уровень 2','⭐⭐⭐ Уровень 3 · скидки'][S.cfg.level];
+ $('#btnReroll').disabled=S.rerolled;
+ show('scrTask');
+}
+$('#btnReroll').onclick=()=>{if(S.rerolled)return;S.rerolled=true;pickTask();showTask()};
+$('#btnToShop').onclick=()=>showShop();
+
+/* ---------- SHOP ---------- */
+const unit=id=>{const p=PR[id],d=S.disc[id]||0;return p.price*(100-d)/100};
+const cartIds=()=>Object.keys(S.cart).filter(k=>S.cart[k]>0);
+const totalOf=()=>cartIds().reduce((a,id)=>a+unit(id)*S.cart[id],0);
+const maxQ=()=>S.cfg.level===1?1:10;
+const tr=p=>S.cfg.lang==='en'?p.en:p.ru;
+const num=v=>{const s=String(v||'').replace(/[\s₸тг.,]/g,'');return /^\d+$/.test(s)?+s:NaN};
+
+function showShop(){
+ const t=task();
+ $('#miniTask').innerHTML=`${t.e} <b>${esc(S.teams[S.turn].name)}:</b> ${esc(taskText(t))}`;
+ $('#budgetNote').textContent=`💰 Бюджет: ${fmt(S.cfg.budget)} ₸`;
+ renderGrid();renderCart();$('#fb').innerHTML='';
+ if(S.done)successUI();
+ show('scrShop');
+}
+function renderGrid(){
+ $('#grid').innerHTML=P.map(p=>{const q=S.cart[p.id]||0,d=S.disc[p.id];
+  return `<button class="prod ${q>=maxQ()?'full':''}" data-id="${p.id}" aria-label="${esc(p.kz)} — ${esc(tr(p))}, ${p.price} тенге">
+   ${d?`<span class="badge">−${d}%</span>`:''}${q?`<span class="incart">${q}</span>`:''}
+   <span class="em">${p.e}</span><b class="kz">${esc(p.kz)}</b><span class="tr">${esc(tr(p))}</span><span class="price">${fmt(p.price)} ₸</span></button>`}).join('');
+}
+function renderCart(){
+ const ids=cartIds(),L=S.cfg.level;
+ const n=ids.reduce((a,id)=>a+S.cart[id],0);
+ $('#cartCount').textContent=n?`${n} шт.`:'';$('#fabN').textContent=n;
+ if(!ids.length){$('#rows').innerHTML=`<div class="empty">Нажимайте на товары, чтобы положить их в корзину 👆</div>`}
+ else $('#rows').innerHTML=ids.map(id=>{const p=PR[id],q=S.cart[id],d=S.disc[id],m=S.mark[id]||'';
+  return `<div class="row ${m}" data-id="${id}">
+   <div class="ri"><span class="em">${p.e}</span><div><b>${esc(p.kz)}</b><small>${esc(tr(p))} · ${fmt(p.price)} ₸${d?` <span class="d">−${d}%</span>`:''}</small></div></div>
+   <div class="qty"><button data-a="dec" aria-label="Меньше" ${S.done?'disabled':''}>−</button><span>${q}</span><button data-a="inc" aria-label="Больше" ${S.done||q>=maxQ()?'disabled':''}>+</button></div>
+   ${L>=2?`<div class="lineinp">${d?`(${fmt(p.price)} − ${d}%) × ${q}`:`${fmt(p.price)} × ${q}`} =<input class="num ${m}" data-line="${id}" inputmode="numeric" autocomplete="off" placeholder="? ₸" value="${esc(S.inp.line[id]||'')}" ${S.done?'readonly':''}></div>`:''}
+  </div>`}).join('');
+ const it=$('#inTotal'),ic=$('#inChange');
+ it.value=S.inp.total;ic.value=S.inp.change;it.readOnly=ic.readOnly=S.done;
+ it.className='num '+(S.mark.total||'');ic.className='num '+(S.mark.change||'');
+ $('#btnCheck').classList.toggle('hide',S.done);
+ $('#btnReveal').classList.toggle('hide',S.done||S.wrong<3);
+ $('#btnToDialog').classList.toggle('hide',!S.done);
+}
+function changeQty(id,dq){
+ if(S.done)return;const q=Math.max(0,Math.min(maxQ(),(S.cart[id]||0)+dq));
+ if(q===(S.cart[id]||0)){if(dq>0&&S.cfg.level===1)fb('warn',['На уровне 1 каждый товар можно взять только 1 раз.']);return}
+ S.cart[id]=q;if(!q)delete S.cart[id];
+ delete S.inp.line[id];delete S.mark[id];S.la[id]=0;delete S.mark.total;delete S.mark.change;
+ renderGrid();renderCart();save();
+}
+$('#grid').addEventListener('click',e=>{const b=e.target.closest('.prod');if(!b)return;changeQty(b.dataset.id,1);
+ const em=b.querySelector('.em');if(em){em.animate&&em.animate([{transform:'scale(1)'},{transform:'scale(1.35)'},{transform:'scale(1)'}],{duration:250})}});
+$('#rows').addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b)return;changeQty(b.closest('.row').dataset.id,b.dataset.a==='inc'?1:-1)});
+$('#rows').addEventListener('input',e=>{const i=e.target.closest('input[data-line]');if(!i)return;S.inp.line[i.dataset.line]=i.value;save()});
+$('#inTotal').oninput=e=>{S.inp.total=e.target.value;save()};
+$('#inChange').oninput=e=>{S.inp.change=e.target.value;save()};
+$('#fab').onclick=()=>$('#cart').scrollIntoView({behavior:'smooth'});
+
+function taskIssues(t){
+ const c=S.cart,ids=cartIds(),iss=[];
+ const nm=id=>`${PR[id].e} ${PR[id].kz} (${tr(PR[id])})`;
+ for(const[id,n]of Object.entries(t.items||{})){const q=c[id]||0;
+  if(q<n)iss.push(`${nm(id)}: нужно ${n} шт., в корзине ${q}.`);
+  else if(t.exact&&q>n)iss.push(`${nm(id)}: нужно ровно ${n} шт., а у вас ${q}.`)}
+ if(t.exact)ids.filter(id=>!(id in t.items)).forEach(id=>iss.push(`${nm(id)} — этого нет в задании.`));
+ for(const[cat,n]of Object.entries(t.qty||{})){const q=ids.filter(id=>PR[id].cat===cat).reduce((a,id)=>a+c[id],0);if(q<n)iss.push(`${CATE[cat]} Нужно ${n} шт. (${CAT[cat]}), у вас ${q}.`)}
+ for(const[cat,n]of Object.entries(t.distinct||{})){const q=ids.filter(id=>PR[id].cat===cat).length;if(q<n)iss.push(`${CATE[cat]} Нужно ${n} разных (${CAT[cat]}), у вас ${q}.`)}
+ if(t.minDistinct&&ids.length<t.minDistinct)iss.push(`Нужно минимум ${t.minDistinct} разных товара, у вас ${ids.length}.`);
+ if(t.discDistinct){const q=ids.filter(id=>S.disc[id]).length;if(q<t.discDistinct)iss.push(`🏷️ Нужно ${t.discDistinct} разных товара со скидкой, у вас ${q}.`)}
+ return iss}
+function lineHint(id,a){
+ const p=PR[id],q=S.cart[id],d=S.disc[id]||0,u=unit(id),nm=`${p.e} ${p.kz}`;
+ if(!d){
+  if(a<=1)return `${nm}: проверь умножение ${fmt(p.price)} × ${q}.`;
+  if(a===2)return `${nm}: ${fmt(p.price)} × ${q} = ${Array(q).fill(fmt(p.price)).join(' + ')}`;
+  return `${nm}: ${fmt(p.price)} × ${q} = ${fmt(u*q)}`}
+ const off=p.price*d/100,how=d===10?`${fmt(p.price)} ÷ 10`:`${fmt(p.price)} ÷ 4`;
+ if(a<=1)return `${nm}: сначала найди скидку: ${d}% от ${fmt(p.price)} = ${how}. Потом вычти и умножь на ${q}.`;
+ if(a===2)return `${nm}: скидка ${fmt(off)} ₸ → цена ${fmt(p.price)} − ${fmt(off)} = ${fmt(u)} ₸. Теперь ${fmt(u)} × ${q} = ?`;
+ return `${nm}: ${fmt(u)} × ${q} = ${fmt(u*q)}`}
+function totalHint(a){
+ const ids=cartIds(),vals=ids.map(id=>unit(id)*S.cart[id]),T=totalOf();
+ const L=S.cfg.level,head=L===1?'Сложи цены':'Сложи стоимости строк';
+ if(a<=1)return `Итог посчитан неверно. ${head}: ${vals.map(fmt).join(' + ')} = ?`;
+ if(a===2&&vals.length>1){let s=vals[0];const steps=[];for(let i=1;i<vals.length;i++){steps.push(`${fmt(s)} + ${fmt(vals[i])} = ${i<vals.length-1?fmt(s+vals[i]):'?'}`);s+=vals[i]}return 'По шагам: '+steps.join('; ')}
+ return `Итог: ${vals.map(fmt).join(' + ')} = ${fmt(T)} ₸`}
+function changeHint(a){const T=totalOf(),B=S.cfg.budget;
+ if(a<=1)return `Сдача посчитана неверно. Сдача = бюджет − итог = ${fmt(B)} − ${fmt(T)} = ?`;
+ if(a===2){const r=Math.ceil(T/1000)*1000;return r<B&&r!==T?`Подсказка: ${fmt(T)} + ${fmt(r-T)} = ${fmt(r)}, а от ${fmt(r)} до ${fmt(B)} ещё ${fmt(B-r)}.`:`Подсказка: сколько нужно прибавить к ${fmt(T)}, чтобы получить ${fmt(B)}?`}
+ return `Сдача: ${fmt(B)} − ${fmt(T)} = ${fmt(B-T)} ₸`}
+
+function fb(kind,lines,extraHTML){const [h,...rest]=lines;
+ $('#fb').innerHTML=`<div class="fb ${kind}">${esc(h)}${rest.length?`<ul>${rest.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`:''}${extraHTML||''}</div>`;
+ if(kind==='bad'){const c=$('#cart');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake')}
+ if(innerWidth<=860)$('#fb').scrollIntoView({behavior:'smooth',block:'center'})}
+function fail(lines){S.wrong++;renderCart();fb('bad',['❌ Қате! Есть ошибка.',...lines]);save()}
+
+$('#btnCheck').onclick=()=>{
+ if(S.done)return;const ids=cartIds();
+ if(!ids.length)return fb('warn',['Корзина пуста. Добавьте товары из магазина 🛒']);
+ const iss=taskIssues(task());
+ if(iss.length){S.wrong++;renderCart();return fb('bad',['🧐 Корзина не совпадает с заданием:',...iss])}
+ if(S.cfg.level>=2){const bad=[];
+  ids.forEach(id=>{const exp=unit(id)*S.cart[id];if(num(S.inp.line[id])===exp)S.mark[id]='ok';else{S.mark[id]='bad';S.la[id]=(S.la[id]||0)+1;bad.push(lineHint(id,S.la[id]))}});
+  if(bad.length)return fail(bad)}
+ const T=totalOf();
+ if(num(S.inp.total)!==T){S.mark.total='bad';S.ta++;return fail([totalHint(S.ta)])}
+ S.mark.total='ok';
+ if(T>S.cfg.budget){renderCart();return fb('warn',[`✔ Итог посчитан верно (${fmt(T)} ₸), но это больше бюджета ${fmt(S.cfg.budget)} ₸!`,`Не хватает ${fmt(T-S.cfg.budget)} ₸. Уберите что-нибудь или выберите товары дешевле.`])}
+ const t=task();
+ if(t.maxSpend&&T>t.maxSpend){renderCart();return fb('warn',[`✔ Итог верный (${fmt(T)} ₸), но по заданию можно потратить не больше ${fmt(t.maxSpend)} ₸.`,'Замените что-нибудь на более дешёвый товар.'])}
+ if(num(S.inp.change)!==S.cfg.budget-T){S.mark.change='bad';S.ca++;return fail([changeHint(S.ca)])}
+ S.mark.change='ok';success(false);
+};
+$('#btnReveal').onclick=()=>{
+ const ids=cartIds();if(!ids.length)return;
+ const iss=taskIssues(task());const T=totalOf();
+ if(iss.length||T>S.cfg.budget||(task().maxSpend&&T>task().maxSpend))return fb('warn',['Сначала соберите корзину по заданию и в пределах бюджета — потом можно показать решение.',...iss]);
+ ids.forEach(id=>{S.inp.line[id]=String(unit(id)*S.cart[id]);S.mark[id]='ok'});
+ S.inp.total=String(T);S.inp.change=String(S.cfg.budget-T);S.mark.total=S.mark.change='ok';
+ success(true)};
+function success(revealed){
+ const base=10+5*S.cfg.level;
+ const pts=revealed?3:Math.max(5,base-3*S.wrong);
+ S.earned=pts;S.teams[S.turn].score+=pts;S.done=true;S.revealed=revealed;
+ save();renderGrid();successUI();renderChips();
+ pop('+'+pts);if(!revealed)confetti();
+}
+function successUI(){
+ renderCart();const T=totalOf();
+ fb('ok',[S.revealed?`👀 Решение показано. Итог ${fmt(T)} ₸, сдача ${fmt(S.cfg.budget-T)} ₸. +${S.earned} балла.`:`🎉 Дұрыс! Жарайсың! Всё верно! +${S.earned} баллов`,
+  `Итого: ${fmt(T)} ₸ · Сдача: ${fmt(S.cfg.budget-T)} ₸`,S.wrong?`Ошибок: ${S.wrong}`:'Без единой ошибки! 🏅']);
+}
+$('#btnToDialog').onclick=()=>showDialog();
+
+/* ---------- DIALOG ---------- */
+function fillPh(tpl,id){
+ const L=S.cfg.lang,T=totalOf(),B=S.cfg.budget,p=id?PR[id]:null,q=id?S.cart[id]:0,d=id?(S.disc[id]||0):0;
+ const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+ const m={B:fmt(B),T:fmt(T),C:fmt(B-T)};
+ if(p){Object.assign(m,{qa:q===1?p.ra:p.ra+' — '+q+(/кг/.test(p.ru)?' кг':' шт.'),u:L==='en'?p.en1:p.ruU,U:cap(p.ruU),n:p.ru.replace(/\s*\(.*\)/,'').toLowerCase(),a:p.ra,g:p.enG,q:q,qn:q===1?p.en1:q+' '+p.enN,p:fmt(p.price),d:d,pd:fmt(unit(id))})}
+ return tpl.replace(/\{(\w+)\}/g,(x,k)=>k in m?m[k]:x)}
+function showDialog(){
+ const L=S.cfg.lang,ph=PH[L],ids=cartIds(),T=totalOf(),B=S.cfg.budget;
+ $('#dlgTitle').textContent=`💬 ${S.teams[S.turn].name}: ${L==='en'?'диалог на английском (Seller — Customer)':'диалог на русском (продавец — покупатель)'}`;
+ $('#receipt').innerHTML=`<h3>🧾 ДҮКЕН · ЧЕК</h3>${ids.map(id=>{const p=PR[id],d=S.disc[id];return `<div class="l"><span>${p.e} ${esc(p.kz)}${S.cart[id]>1?' ×'+S.cart[id]:''}${d?' −'+d+'%':''}</span><span>${fmt(unit(id)*S.cart[id])}</span></div>`}).join('')}
+  <hr><div class="l t"><span>Барлығы / Итого</span><span>${fmt(T)} ₸</span></div><div class="l"><span>Төленді / Оплачено</span><span>${fmt(B)} ₸</span></div><div class="l t"><span>Қайтарым / Сдача</span><span>${fmt(B-T)} ₸</span></div><hr><div style="text-align:center">Рақмет! Спасибо!</div>`;
+ $('#dlgHint').textContent=L==='en'?'Нажимайте на фразы, чтобы собрать диалог. Затем разыграйте его по ролям: один — Seller, другой — Customer.':'Нажимайте на фразы, чтобы собрать диалог. Затем разыграйте его по ролям: продавец и покупатель.';
+ $('#lblItem').textContent=L==='en'?'Item / Товар:':'Товар:';
+ $('#hBuyer').textContent='🧑 '+ph.roleB+(L==='en'?' / Покупатель':'');
+ $('#hSeller').textContent='🧑‍💼 '+ph.roleS+(L==='en'?' / Продавец':'');
+ $('#itemSel').innerHTML=ids.map(id=>`<option value="${id}">${PR[id].e} ${esc(PR[id].kz)} — ${esc(tr(PR[id]))}</option>`).join('');
+ $('#dlgText').value=S.dlg||'';
+ $('#dlgText').placeholder=L==='en'?'Customer: Hello!\nSeller: Hello! Can I help you?\n…':'Покупатель: Здравствуйте!\nПродавец: Здравствуйте! Чем могу помочь?\n…';
+ renderPhrases();show('scrDialog');
+}
+function renderPhrases(){
+ const L=S.cfg.lang,ph=PH[L],id=$('#itemSel').value,d=S.disc[id]||0;
+ const mk=(arr,role,cls)=>arr.map((t,i)=>{const needD=/\{(d|pd)\}/.test(t);return needD&&!d?'':`<button class="ph ${cls}" data-role="${role}" data-t="${i}">${esc(fillPh(t,id))}</button>`}).join('');
+ $('#phBuyer').innerHTML=mk(ph.buyer,'B','');$('#phSeller').innerHTML=mk(ph.seller,'S','s');
+}
+$('#itemSel').onchange=renderPhrases;
+function addLine(s){const ta=$('#dlgText');ta.value=(ta.value&&!ta.value.endsWith('\n')?ta.value+'\n':ta.value)+s;S.dlg=ta.value;save();ta.scrollTop=ta.scrollHeight}
+document.querySelector('.phr').addEventListener('click',e=>{const b=e.target.closest('.ph');if(!b||b.disabled)return;const ph=PH[S.cfg.lang];
+ const role=b.dataset.role==='B'?ph.roleB:ph.roleS,arr=b.dataset.role==='B'?ph.buyer:ph.seller;addLine(role+': '+fillPh(arr[+b.dataset.t],$('#itemSel').value))});
+$('#dlgText').oninput=e=>{S.dlg=e.target.value;save()};
+$('#btnClear').onclick=()=>{$('#dlgText').value='';S.dlg='';save()};
+$('#btnSample').onclick=()=>{
+ const ph=PH[S.cfg.lang],b=ph.buyer,s=ph.seller,B=ph.roleB+': ',Sl=ph.roleS+': ',out=[];
+ out.push(B+b[0],Sl+s[0]);
+ cartIds().forEach(id=>{out.push(B+fillPh(b[1],id),Sl+fillPh(s[1],id));if(S.disc[id])out.push(Sl+fillPh(s[2],id)+' '+fillPh(s[3],id));out.push(B+fillPh(b[2],id))});
+ out.push(B+b[4],Sl+fillPh(s[4]),B+fillPh(b[5]),Sl+fillPh(s[5]),B+b[6],Sl+s[6]);
+ const ta=$('#dlgText');if(ta.value.trim()&&!confirm('Заменить ваш текст примером?'))return;
+ ta.value=out.join('\n');S.dlg=ta.value;save()};
+$('#btnSpeak').onclick=()=>{
+ if(!('speechSynthesis' in window)){alert('Озвучивание не поддерживается этим браузером.');return}
+ const synth=window.speechSynthesis;if(synth.speaking){synth.cancel();return}
+ const lang=S.cfg.lang==='en'?'en-US':'ru-RU';const vs=synth.getVoices().filter(v=>v.lang&&v.lang.toLowerCase().startsWith(lang.slice(0,2)));
+ $('#dlgText').value.split('\n').map(l=>l.replace(/^[^:]{1,20}:\s*/,'').trim()).filter(Boolean).forEach(l=>{const u=new SpeechSynthesisUtterance(l.replace(/(\d)\s(\d)/g,'$1$2'));u.lang=lang;if(vs[0])u.voice=vs[0];u.rate=.9;synth.speak(u)})};
+document.querySelector('.score3').addEventListener('click',e=>{const b=e.target.closest('button[data-dp]');if(!b)return;
+ try{window.speechSynthesis&&speechSynthesis.cancel()}catch(x){}
+ const dp=+b.dataset.dp;if(dp){S.teams[S.turn].score+=dp;pop('+'+dp);if(dp===10)confetti()}
+ nextTurn()});
+function nextTurn(){S.turn++;if(S.turn>=S.teams.length){S.turn=0;showRound()}else{save();setTimeout(startTurn,dpDelay())}}
+const dpDelay=()=>600;
+
+/* ---------- ROUND / FINAL ---------- */
+function sorted(){return S.teams.map((t,i)=>({...t,i})).sort((a,b)=>b.score-a.score)}
+function boardHTML(){const medals=['🥇','🥈','🥉'];return `<tr><th>#</th><th>Команда</th><th>Баллы</th></tr>`+sorted().map((t,k)=>`<tr><td>${medals[k]||k+1}</td><td>${esc(t.name)}</td><td>${t.score}</td></tr>`).join('')}
+function showRound(){
+ const last=S.round>=S.cfg.rounds;
+ $('#roundTitle').textContent=`📊 Итоги раунда ${S.round}`;
+ $('#board').innerHTML=boardHTML();
+ $('#btnNextRound').textContent=last?'🏆 Итоги игры':'▶ Следующий раунд';
+ show('scrRound');
+}
+$('#btnNextRound').onclick=()=>{if(S.round>=S.cfg.rounds){showFinal();return}S.round++;S.turn=0;startTurn()};
+function showFinal(){
+ const s=sorted(),order=[s[1],s[0],s[2]],cls=['p2','p1','p3'],med=['🥈','🥇','🥉'];
+ $('#podium').innerHTML=order.map((t,k)=>t?`<div class="pod ${cls[k]}"><span class="m">${med[k]}</span>${esc(t.name)}<br>${t.score}</div>`:'').join('');
+ $('#finalBoard').innerHTML=boardHTML();
+ show('scrFinal');confetti();setTimeout(confetti,900);
+}
+$('#btnNew').onclick=()=>{clearSave();S=null;renderSetup();show('scrSetup')};
+
+/* ---------- FX ---------- */
+let raf=0;
+function confetti(){
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const c=$('#fx'),x=c.getContext('2d'),W=c.width=innerWidth,H=c.height=innerHeight;
+ const cols=['#00a3c4','#f5b800','#ff6b6b','#1f9d55','#8b5cf6','#ff9f1c'];
+ const ps=Array.from({length:160},()=>({x:W/2+(Math.random()-.5)*W*.3,y:H*.45,vx:(Math.random()-.5)*16,vy:-Math.random()*16-5,s:7+Math.random()*7,c:cols[Math.random()*cols.length|0],r:Math.random()*6,vr:(Math.random()-.5)*.4}));
+ cancelAnimationFrame(raf);let t=0;
+ (function f(){x.clearRect(0,0,W,H);ps.forEach(p=>{p.vy+=.38;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});
+  if(++t<170)raf=requestAnimationFrame(f);else x.clearRect(0,0,W,H)})();
+}
+function pop(txt){const p=$('#pop');p.textContent=txt;p.classList.remove('go');void p.offsetWidth;p.classList.add('go')}
+
+/* ---------- INIT ---------- */
+renderSetup();show('scrSetup');
+})();
+</script>
+</body>
+</html>
